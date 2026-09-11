@@ -1,43 +1,35 @@
-﻿import json
 import os
+import json
 import random
-import ssl
 import time
+import ssl
 import paho.mqtt.client as mqtt
 
 MQTT_BROKER = os.getenv("MQTT_BROKER", "mosquitto")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "8883"))
-MQTT_TOPIC = "iot/sensor/temperature"
-DEVICE_ID = "Sensor_01"
+TOPIC = "iot/sensor/temperature"
 
-def on_connect(client, userdata, flags, reason_code, properties):
-    print(f"Connected to MQTT: {reason_code}")
+client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2, client_id="Sensor_01")
 
-client = mqtt.Client(
-    mqtt.CallbackAPIVersion.VERSION2,
-    client_id=DEVICE_ID
-)
+# Configuration TLS Chiffr?e
+client.tls_set(ca_certs="/app/certs/ca.crt", tls_version=ssl.PROTOCOL_TLS_CLIENT)
+client.tls_insecure_set(True)
 
-client.tls_set(
-    ca_certs="/app/certs/ca.crt",
-    certfile="/app/certs/client.crt",
-    keyfile="/app/certs/client.key",
-    tls_version=ssl.PROTOCOL_TLS_CLIENT
-)
+connected = False
+while not connected:
+    try:
+        client.connect(MQTT_BROKER, MQTT_PORT, 60)
+        connected = True
+        print(" Connected to MQTT Broker over TLS!")
+    except Exception as e:
+        print(f"Waiting for MQTT Broker... ({e})")
+        time.sleep(2)
 
-client.on_connect = on_connect
-client.connect(MQTT_BROKER, MQTT_PORT, 60)
 client.loop_start()
 
 while True:
-    temperature = round(random.uniform(20.0, 30.0), 1)
-
-    payload = json.dumps({
-        "device": DEVICE_ID,
-        "temperature": temperature,
-        "unit": "C"
-    })
-
-    result = client.publish(MQTT_TOPIC, payload)
-    print(f"Published: {payload} | Status: {result.rc}")
-    time.sleep(2)
+    temp = round(random.uniform(20.0, 30.0), 1)
+    payload = json.dumps({"device": "Sensor_01", "temperature": temp, "unit": "C"})
+    res = client.publish(TOPIC, payload)
+    print(f"Sent (TLS Encrypted): {payload}")
+    time.sleep(3)

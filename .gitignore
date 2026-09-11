@@ -1,7 +1,9 @@
-certs/*.key
-certs/*.crt
-certs/*.csr
-certs/*.srl
 .env
+*.key
+*.crt
+*.csr
+*.srl
+*.cnf
+passwd
 __pycache__/
 *.pyc
