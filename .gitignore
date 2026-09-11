@@ -1,0 +1,7 @@
+certs/*.key
+certs/*.crt
+certs/*.csr
+certs/*.srl
+.env
+__pycache__/
+*.pyc
